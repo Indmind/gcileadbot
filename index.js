@@ -24,4 +24,9 @@ app.hears("all", async ctx => {
     return ctx.replyWithMarkdown(answer);
 });
 
+app.hears("debug", async ctx => {
+    const answer = JSON.stringify(ctx);
+    return ctx.replyWithMarkdown(answer);
+});
+
 app.startPolling();
