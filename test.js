@@ -1,3 +1,6 @@
-const gci = require('./gci')
+const gci = require("./gci");
 
-gci.showAll()
+(async () => {
+    const data = await gci.showAll();
+    console.log(data);
+})();
