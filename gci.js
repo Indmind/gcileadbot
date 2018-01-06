@@ -12,7 +12,7 @@ _Tasks Completed: ${org.completed_task_instance_count}_
 ${getLeadersNameList(org.leaders).join("\n")}`
     );
 
-    console.log(arrResponse.join("\n"));
+    return arrResponse.join("\n");
 }
 
 async function readJSON(path) {
