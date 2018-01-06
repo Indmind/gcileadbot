@@ -2,9 +2,9 @@
   "name": "gcileadbot",
   "version": "0.0.1",
   "description": "a telegram bot that show gci current leader",
-  "main": "api/index.js",
+  "main": "index.js",
   "scripts": {
-    "start": "echo \"Error: no test specified\" && exit 1"
+    "start": "node gather.js && node index.js"
   },
   "author": "Indmind",
   "license": "MIT",
