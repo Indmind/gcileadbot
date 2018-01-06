@@ -2,6 +2,7 @@ const Telegraf = require("telegraf");
 const http = require("http");
 
 const gather = require("./gather");
+const gci = require("./gci");
 
 const app = new Telegraf(process.env.TOKEN);
 
@@ -13,15 +14,14 @@ const server = http.createServer(async (request, response) => {
 });
 
 server.listen(port, err => {
-    if (err) {
-        console.log(err);
-    }
+    if (err) console.log(err);
 
     console.log(`server is listening on ${port}`);
 });
 
-app.hears("all", ctx => {
-    return ctx.reply("it works!");
+app.hears("all", async ctx => {
+    const answer = await gci.showAll();
+    return ctx.replyWithMarkdown(answer);
 });
 
 app.startPolling();
