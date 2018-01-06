@@ -24,8 +24,8 @@ app.hears("all", async ctx => {
     return ctx.replyWithMarkdown(answer);
 });
 
-app.hears("debug", async ctx => {
-    const answer = JSON.stringify(ctx);
+app.command("orgs", async ctx => {
+    const answer = ctx.message.text;
     return ctx.replyWithMarkdown(answer);
 });
 
