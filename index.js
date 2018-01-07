@@ -10,6 +10,7 @@ const app = new Telegraf(process.env.TOKEN);
 const port = process.env.PORT || 8080;
 
 const server = http.createServer(async (request, response) => {
+    await gather.stamp();
     const result = await gather.exec("update");
     response.end(result);
 });
@@ -99,13 +100,14 @@ app.on("text", async ctx => {
             const query = ctx.message.text;
             const orgInfo = await gci.findUser(query);
             const templateOrg = await gci.templateOrg(orgInfo.org);
+            const stamp = await gci.stamp()
 
             //remove state
             state[userId] = null;
 
             await ctx.replyWithMarkdown(templateOrg);
             return await ctx.replyWithMarkdown(
-                `Accuracy: ${orgInfo.accuracy}`,
+                `Last updated: ${stamp}\nAccuracy: ${orgInfo.accuracy}`,
                 menu
             );
         }

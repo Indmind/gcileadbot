@@ -1,7 +1,8 @@
 const fs = require("fs");
 const stringSimilarity = require("string-similarity");
+const cheerio = require("cheerio");
 
-const util = require("./utils");
+const utils = require("./utils");
 
 async function showAll() {
     const gcidata = await readJSON("./data/data.json");
@@ -62,10 +63,17 @@ function getLeadersNameList(leader) {
 }
 
 function stamp() {
-    const updated = fs.statSync("./data/data.json").mtime;
-    return util.timeDifference(
+    const html = fs.readFileSync("./data/data.html");
+
+    const $ = cheerio.load(html);
+
+    const lastUpdatedDate = $("small#time")
+        .text()
+        .replace("Last updated: ", "");
+
+    return utils.timeDifference(
         new Date().getTime(),
-        new Date(updated).getTime()
+        new Date(lastUpdatedDate).getTime()
     );
 }
 
