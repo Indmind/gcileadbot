@@ -8,7 +8,7 @@ const app = new Telegraf(process.env.TOKEN);
 
 const port = process.env.PORT || 8080;
 
-const server = http.createServer(async(request, response) => {
+const server = http.createServer(async (request, response) => {
     const result = await gather.exec("update");
     response.end(result);
 });
@@ -30,8 +30,8 @@ app.command("orgs", async ctx => {
     return ctx.replyWithMarkdown(answer);
 });
 
-bot.catch((err) => {
-    console.log('Ooops', err)
-})
+app.catch(err => {
+    console.log("Ooops", err);
+});
 
-app.startPolling()
+app.startPolling();
