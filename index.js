@@ -63,12 +63,15 @@ app.hears(/all/i, async ctx => {
 });
 
 app.hears(/organization/i, async ctx => {
+    utils.log(ctx);
+
     const orgButton = await utils.createAllOrgsButton();
 
     return await ctx.replyWithMarkdown("*Choose organization*", orgButton);
 });
 
 app.hears(/cancel/i, async ctx => {
+    utils.log(ctx);
     //remove state
     state[ctx.message.from.id] = null;
     return await ctx.reply("Canceled", utils.allButton);
