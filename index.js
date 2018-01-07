@@ -22,10 +22,7 @@ server.listen(port, err => {
 
 app.command("start", ctx => {
     utils.log(ctx);
-    ctx.reply(
-        "Hello! This bot show current Google Code-in leaders",
-        utils.allButton
-    );
+    ctx.reply("Hello! use the button below to interact", utils.allButton);
 });
 
 let state = {};
@@ -40,7 +37,7 @@ app.hears(/search/i, async ctx => {
     state[userId].action = "search";
 
     return await ctx.replyWithMarkdown(
-        `Send me _organization_ name`,
+        `Send me _user name_ you want to search`,
         utils.cancelButton
     );
 });
@@ -60,15 +57,31 @@ app.hears(/all/i, async ctx => {
     const text1 = `${res1.join("\n")}\n`;
     const text2 = `${res2.join("\n")}\nLast updated: ${answer.time_diff}`;
 
-    await ctx.replyWithMarkdown(text1);
-    await ctx.replyWithMarkdown(text2);
+    await ctx.replyWithMarkdown(text1, utils.allButton);
+    await ctx.replyWithMarkdown(text2, utils.allButton);
     return true;
+});
+
+app.hears(/organization/i, async ctx => {
+    const orgButton = await utils.createAllOrgsButton();
+
+    return await ctx.replyWithMarkdown("*Choose organization*", orgButton);
 });
 
 app.hears(/cancel/i, async ctx => {
     //remove state
     state[ctx.message.from.id] = null;
     return await ctx.reply("Canceled", utils.allButton);
+});
+
+app.on("callback_query", async ctx => {
+    const orgName = ctx.update.callback_query.data;
+    const orgInfo = await gci.findOrg(orgName);
+    const templateOrg = await gci.templateOrg(orgInfo.result);
+    const stamp = await gci.stamp();
+
+    await ctx.replyWithMarkdown(templateOrg, utils.allButton);
+    return ctx.replyWithMarkdown(`_Last updated: ${stamp}_`);
 });
 
 app.on("text", async ctx => {
@@ -81,8 +94,8 @@ app.on("text", async ctx => {
     if (state[userId]) {
         if (state[userId].action === "search") {
             const query = ctx.message.text;
-            const orgInfo = await gci.find(query);
-            const templateOrg = await gci.templateOrg(orgInfo.result);
+            const orgInfo = await gci.findUser(query);
+            const templateOrg = await gci.templateOrg(orgInfo.org);
 
             //remove state
             state[userId] = null;

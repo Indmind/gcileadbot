@@ -9,7 +9,6 @@ async function showAll() {
     const fetchingTemplate = gcidata.map(templateOrg);
     const template = await Promise.all(fetchingTemplate);
 
-    // return `${arrResponse.join("\n")}\nLast updated: ${stamp()}`;
     return {
         result: template,
         time_diff: stamp()
@@ -24,7 +23,7 @@ async function templateOrg(org) {
     }_\n\n${getLeadersNameList(org.leaders).join("\n")}\n`;
 }
 
-async function find(query) {
+async function findOrg(query) {
     const gcidata = await readJSON("./data/data.json");
     const orgName = gcidata.map(org => org.name);
     const testName = stringSimilarity.findBestMatch(query, orgName);
@@ -32,6 +31,26 @@ async function find(query) {
     const orgInfo = gcidata.find(org => org.name == nameRes.target);
 
     return { result: orgInfo, accuracy: nameRes.rating };
+}
+
+async function findUser(query) {
+    const gcidata = await readJSON("./data/data.json");
+
+    const matchResult = gcidata.map(org =>
+        stringSimilarity.findBestMatch(query, getLeadersNameList(org.leaders))
+    );
+
+    const bestResult = matchResult
+        .map(result => result.bestMatch)
+        .sort((a, b) => b.rating - a.rating)[0];
+
+    const resultName = bestResult.target;
+
+    const orgInfo = gcidata.find(org =>
+        getLeadersNameList(org.leaders).includes(resultName)
+    );
+
+    return { org: orgInfo, accuracy: bestResult.rating };
 }
 
 async function readJSON(path) {
@@ -52,6 +71,8 @@ function stamp() {
 
 module.exports = {
     showAll,
-    find,
-    templateOrg
+    findOrg,
+    findUser,
+    templateOrg,
+    stamp
 };

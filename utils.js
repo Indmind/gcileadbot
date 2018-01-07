@@ -1,4 +1,5 @@
-const { Extra } = require("telegraf");
+const { Markup } = require("telegraf");
+const fs = require("fs");
 
 function timeDifference(current, previous) {
     const msPerMinute = 60 * 1000;
@@ -32,14 +33,31 @@ function log(ctx) {
     );
 }
 
-const allButton = Extra.markdown().markup(m =>
-    m
-        .keyboard([m.callbackButton("Show All"), m.callbackButton("Search")])
-        .resize()
-);
+const allButton = Markup.keyboard([["Show All", "Organization"], ["Search"]])
+    .resize()
+    .extra();
 
-const cancelButton = Extra.markdown().markup(m =>
-    m.keyboard([m.callbackButton("Cancel")]).resize()
-);
+const cancelButton = Markup.keyboard(["Cancel"])
+    .resize()
+    .extra();
 
-module.exports = { timeDifference, log, allButton, cancelButton };
+async function createAllOrgsButton() {
+    const gcidata = await readJSON("./data/data.json");
+    const cbButton = gcidata.map(org => [
+        Markup.callbackButton(org.name, org.name)
+    ]);
+
+    return Markup.inlineKeyboard(cbButton).extra();
+}
+
+async function readJSON(path) {
+    return JSON.parse(fs.readFileSync(path));
+}
+
+module.exports = {
+    timeDifference,
+    log,
+    allButton,
+    cancelButton,
+    createAllOrgsButton
+};
