@@ -1,28 +1,37 @@
 const fs = require("fs");
+const stringSimilarity = require("string-similarity");
 
 const util = require("./utils");
 
 async function showAll() {
     const gcidata = await readJSON("./data/data.json");
 
-    const arrResponse = gcidata.map(
-        org =>
-            `[${org.name}](https://codein.withgoogle.com/organizations/${
-                org.slug
-            })\n\n_Tasks Completed: ${
-                org.completed_task_instance_count
-            }_\n\n${getLeadersNameList(org.leaders).join("\n")}\n`
-    );
+    const fetchingTemplate = gcidata.map(templateOrg);
+    const template = await Promise.all(fetchingTemplate);
 
-    return `${arrResponse.join("\n")}\nLast updated: ${stamp()}`;
+    // return `${arrResponse.join("\n")}\nLast updated: ${stamp()}`;
+    return {
+        result: template,
+        time_diff: stamp()
+    };
 }
 
-async function findOrg(query) {
-    const gcidata = await readJSON("./data/data.json");
+async function templateOrg(org) {
+    return `[${org.name}](https://codein.withgoogle.com/organizations/${
+        org.slug
+    })\n\n_Tasks Completed: ${
+        org.completed_task_instance_count
+    }_\n\n${getLeadersNameList(org.leaders).join("\n")}\n`;
+}
 
-    const result = gcidata.find(org => {
-        [org.name, org.slug].includes(query);
-    });
+async function find(query) {
+    const gcidata = await readJSON("./data/data.json");
+    const orgName = gcidata.map(org => org.name);
+    const testName = stringSimilarity.findBestMatch(query, orgName);
+    const nameRes = testName.bestMatch;
+    const orgInfo = gcidata.find(org => org.name == nameRes.target);
+
+    return { result: orgInfo, accuracy: nameRes.rating };
 }
 
 async function readJSON(path) {
@@ -30,7 +39,7 @@ async function readJSON(path) {
 }
 
 function getLeadersNameList(leader) {
-    return leader.map(lead => lead.display_name);
+    return leader.map(lead => lead.display_name.replace("_", " "));
 }
 
 function stamp() {
@@ -42,5 +51,7 @@ function stamp() {
 }
 
 module.exports = {
-    showAll
+    showAll,
+    find,
+    templateOrg
 };

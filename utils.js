@@ -1,3 +1,5 @@
+const { Extra } = require("telegraf");
+
 function timeDifference(current, previous) {
     const msPerMinute = 60 * 1000;
     const msPerHour = msPerMinute * 60;
@@ -22,4 +24,22 @@ function timeDifference(current, previous) {
     }
 }
 
-module.exports = { timeDifference };
+function log(ctx) {
+    console.log(
+        `${ctx.message.from.first_name} ${ctx.message.from.last_name}[${
+            ctx.message.from.id
+        }]: ${ctx.message.text}`
+    );
+}
+
+const allButton = Extra.markdown().markup(m =>
+    m
+        .keyboard([m.callbackButton("Show All"), m.callbackButton("Search")])
+        .resize()
+);
+
+const cancelButton = Extra.markdown().markup(m =>
+    m.keyboard([m.callbackButton("Cancel")]).resize()
+);
+
+module.exports = { timeDifference, log, allButton, cancelButton };
