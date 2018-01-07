@@ -14,7 +14,15 @@ async function showAll() {
             }_\n\n${getLeadersNameList(org.leaders).join("\n")}\n`
     );
 
-    return `${arrResponse.join("\n")}\n${stamp()}`;
+    return `${arrResponse.join("\n")}\nLast updated: ${stamp()}`;
+}
+
+async function findOrg(query) {
+    const gcidata = await readJSON("./data/data.json");
+
+    const result = gcidata.find(org => {
+        [org.name, org.slug].includes(query);
+    });
 }
 
 async function readJSON(path) {
@@ -27,11 +35,10 @@ function getLeadersNameList(leader) {
 
 function stamp() {
     const updated = fs.statSync("./data/data.json").mtime;
-    const sentence =
-        "Last updated " +
-        util.timeDifference(new Date().getTime(), new Date(updated).getTime());
-
-    return sentence;
+    return util.timeDifference(
+        new Date().getTime(),
+        new Date(updated).getTime()
+    );
 }
 
 module.exports = {
