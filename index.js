@@ -79,6 +79,8 @@ app.hears(/cancel/i, async ctx => {
 });
 
 app.on("callback_query", async ctx => {
+    console.log(ctx.update.callback_query.data);
+
     const orgName = ctx.update.callback_query.data;
     const orgInfo = await gci.findOrg(orgName);
     const templateOrg = await gci.templateOrg(orgInfo.result);

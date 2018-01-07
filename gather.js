@@ -16,7 +16,6 @@ async function fetchHTML(url) {
 
 async function stamp() {
     const html = await fetchHTML("https://gci-leaders.netlify.com");
-    fs.writeFileSync("./data/data.html", html);
 
     const $ = cheerio.load(html);
 
