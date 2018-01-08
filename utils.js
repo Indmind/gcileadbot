@@ -33,7 +33,7 @@ function log(ctx) {
     );
 }
 
-const allButton = Markup.keyboard([["Show All", "Organization"], ["Search"]])
+const allButton = Markup.keyboard([["Show All", "Organizations"], ["Search"]])
     .resize()
     .extra();
 

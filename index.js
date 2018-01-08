@@ -56,11 +56,15 @@ app.hears(/all/i, async ctx => {
     const res2 = res.slice(mid);
 
     const text1 = `${res1.join("\n")}\n`;
-    const text2 = `${res2.join("\n")}\nLast updated: ${answer.time_diff}`;
+    const text2 = `${res2.join("\n")}\n`;
 
-    await ctx.replyWithMarkdown(text1, utils.allButton);
-    await ctx.replyWithMarkdown(text2, utils.allButton);
-    return true;
+    await ctx.replyWithMarkdown(text1);
+    await ctx.replyWithMarkdown(text2);
+
+    return ctx.replyWithMarkdown(
+        `Last updated: ${answer.time_diff}`,
+        utils.allButton
+    );
 });
 
 app.hears(/organization/i, async ctx => {
@@ -68,13 +72,14 @@ app.hears(/organization/i, async ctx => {
 
     const orgButton = await utils.createAllOrgsButton();
 
-    return await ctx.replyWithMarkdown("*Choose organization*", orgButton);
+    return await ctx.replyWithMarkdown("*Select organization*", orgButton);
 });
 
 app.hears(/cancel/i, async ctx => {
     utils.log(ctx);
     //remove state
     state[ctx.message.from.id] = null;
+
     return await ctx.reply("Canceled", utils.allButton);
 });
 
@@ -87,6 +92,7 @@ app.on("callback_query", async ctx => {
     const stamp = await gci.stamp();
 
     await ctx.replyWithMarkdown(templateOrg, utils.allButton);
+
     return ctx.replyWithMarkdown(`_Last updated: ${stamp}_`);
 });
 
@@ -94,28 +100,64 @@ app.on("text", async ctx => {
     utils.log(ctx);
 
     const userId = ctx.message.from.id;
+    const userText = ctx.message.text;
 
     const menu = utils.allButton;
 
     if (state[userId]) {
         if (state[userId].action === "search") {
-            const query = ctx.message.text;
-            const orgInfo = await gci.findUser(query);
-            const templateOrg = await gci.templateOrg(orgInfo.org);
-            const stamp = await gci.stamp()
+            const result = await findUser(userText);
 
-            //remove state
-            state[userId] = null;
+            await ctx.replyWithMarkdown(result.templateOrg);
 
-            await ctx.replyWithMarkdown(templateOrg);
             return await ctx.replyWithMarkdown(
-                `Last updated: ${stamp}\nAccuracy: ${orgInfo.accuracy}`,
+                `Last updated: ${result.stamp}\nAccuracy: ${
+                    result.orgInfo.accuracy
+                }`,
                 menu
             );
         }
+
+        //remove state
+        state[userId] = null;
     }
 
-    return await ctx.reply("I don't know what do you want :(", menu);
+    // try to find organization
+    const orgInfo = await gci.findOrg(userText);
+
+    if (orgInfo.accuracy > 0.5) {
+        const template = await gci.templateOrg(orgInfo.result);
+        const stamp = await gci.stamp();
+
+        await ctx.replyWithMarkdown(
+            `I found an organization you might be looking for \n\n${template}`
+        );
+
+        return await ctx.replyWithMarkdown(
+            `Last updated: ${stamp}\nAccuracy: ${orgInfo.accuracy}`,
+            menu
+        );
+    }
+
+    // try to find user
+    const result = await findUser(userText);
+
+    if (result.orgInfo.accuracy > 0.5) {
+        await ctx.replyWithMarkdown(
+            `I found a username you might be looking for \n\n${
+                result.templateOrg
+            }`
+        );
+
+        return await ctx.replyWithMarkdown(
+            `Last updated: ${result.stamp}\nAccuracy: ${
+                result.orgInfo.accuracy
+            }`,
+            menu
+        );
+    }
+
+    return await ctx.reply("I can't find anything :(", menu);
 });
 
 app.catch(err => {
@@ -123,3 +165,11 @@ app.catch(err => {
 });
 
 app.startPolling();
+
+async function findUser(query) {
+    const orgInfo = await gci.findUser(query);
+    const templateOrg = await gci.templateOrg(orgInfo.org);
+    const stamp = await gci.stamp();
+
+    return { templateOrg, stamp, orgInfo };
+}
