@@ -8,7 +8,7 @@ async function showAll() {
     const template = await Promise.all(fetchingTemplate);
 
     return {
-        result: template.join("\n"),
+        result: template,
         time_diff: stamp()
     };
 }

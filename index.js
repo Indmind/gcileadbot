@@ -64,8 +64,8 @@ app.hears(/all/i, async ctx => {
     const res1 = res.slice(0, mid);
     const res2 = res.slice(mid);
 
-    const text1 = `${res1}\n`;
-    const text2 = `${res2}\n`;
+    const text1 = `${res1.join("\n")}\n`;
+    const text2 = `${res2.join("\n")}\n`;
 
     await ctx.replyWithMarkdown(text1);
     await ctx.replyWithMarkdown(text2);
