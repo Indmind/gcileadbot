@@ -11,6 +11,7 @@ const port = process.env.PORT || 8080;
 
 const server = http.createServer(async (request, response) => {
     await gather.stamp();
+    await gather.pre2017();
     const result = await gather.exec("update");
     response.end(result);
 });
@@ -27,6 +28,14 @@ app.command("start", ctx => {
 });
 
 let state = {};
+
+app.hears(/year/i, async ctx => {
+    utils.log(ctx);
+
+    const buttonYear = await utils.createButtonYear();
+
+    return ctx.reply("Not done yet...", buttonYear);
+});
 
 app.hears(/search/i, async ctx => {
     utils.log(ctx);
@@ -86,14 +95,25 @@ app.hears(/cancel/i, async ctx => {
 app.on("callback_query", async ctx => {
     console.log(`Callback Query: ${ctx.update.callback_query.data}`);
 
-    const orgName = ctx.update.callback_query.data;
-    const orgInfo = await gci.findOrg(orgName);
-    const templateOrg = await gci.templateOrg(orgInfo.result);
-    const stamp = await gci.stamp();
+    const cbdata = ctx.update.callback_query.data.split(":");
+    const action = cbdata[0];
+    const text = cbdata[1];
 
-    await ctx.replyWithMarkdown(templateOrg, utils.allButton);
+    if (action === "cy") {
+        const result = await gci.showAllByYear(parseInt(text));
 
-    return ctx.replyWithMarkdown(`_Last updated: ${stamp}_`);
+        return await ctx.replyWithMarkdown(result, utils.allButton);
+    }
+
+    if (action === "org") {
+        const orgInfo = await gci.findOrg(text);
+        const templateOrg = await gci.templateOrg(orgInfo.result);
+        const stamp = await gci.stamp();
+
+        await ctx.replyWithMarkdown(templateOrg, utils.allButton);
+
+        return ctx.replyWithMarkdown(`_Last updated: ${stamp}_`);
+    }
 });
 
 app.on("text", async ctx => {

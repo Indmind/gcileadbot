@@ -31,6 +31,15 @@ async function stamp() {
     fs.writeFileSync("./data/ago.txt", diff);
 }
 
+async function pre2017(){
+    const data = await fetchJSON(
+        "https://gci-leaders.netlify.com/pre2017.json"
+    );
+
+    fs.writeFileSync("./data/pre2017.json", JSON.stringify(data));
+
+}
+
 async function gather(proc = "module") {
     console.log(`Gathering data from ${proc}`);
 
@@ -46,6 +55,7 @@ async function gather(proc = "module") {
 if (require.main === module) {
     gather("cli");
     stamp();
+    pre2017();
 } else {
-    module.exports = { exec: gather, stamp };
+    module.exports = { exec: gather, stamp, pre2017 };
 }

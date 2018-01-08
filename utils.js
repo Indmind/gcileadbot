@@ -33,7 +33,10 @@ function log(ctx) {
     );
 }
 
-const allButton = Markup.keyboard([["Show All", "Organizations"], ["Search"]])
+const allButton = Markup.keyboard([
+    ["Show All", "Organizations"],
+    ["Search", "Years"]
+])
     .resize()
     .extra();
 
@@ -44,14 +47,35 @@ const cancelButton = Markup.keyboard(["Cancel"])
 async function createAllOrgsButton() {
     const gcidata = await readJSON("./data/data.json");
     const cbButton = gcidata.map(org => [
-        Markup.callbackButton(org.name, org.name)
+        Markup.callbackButton(org.name, `org:${org.name}`)
     ]);
 
     return Markup.inlineKeyboard(cbButton).extra();
 }
 
+async function createButtonYear() {
+    const pre2017 = await readJSON("./data/pre2017.json");
+    const cbButton = pre2017.map(data =>
+        Markup.callbackButton(data.year, `cy:${data.year}`)
+    );
+
+    const organizedButton = await divideArray(cbButton, 2);
+    console.log(organizedButton);
+
+    return Markup.inlineKeyboard(organizedButton).extra();
+}
+
 async function readJSON(path) {
     return JSON.parse(fs.readFileSync(path));
+}
+
+async function divideArray(arr, perchunk) {
+    return arr.reduce((ar, it, i) => {
+        const ix = Math.floor(i / perchunk);
+        if (!ar[ix]) ar[ix] = [];
+        ar[ix].push(it);
+        return ar;
+    }, []);
 }
 
 module.exports = {
@@ -59,5 +83,6 @@ module.exports = {
     log,
     allButton,
     cancelButton,
-    createAllOrgsButton
+    createAllOrgsButton,
+    createButtonYear
 };

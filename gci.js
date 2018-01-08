@@ -13,6 +13,53 @@ async function showAll() {
     };
 }
 
+async function showAllByYear(year) {
+    if (year === 2017) {
+        return showAll();
+    }
+
+    const pre2017 = await readJSON("./data/pre2017.json");
+    const dataByYear = pre2017.find(data => data.year === year);
+
+    const templatingOrg = dataByYear.orgs.map(async org => {
+        const template = await templatePreOrg(org);
+
+        return `${template}\n`;
+    });
+
+    const orgResult = await Promise.all(templatingOrg);
+    const orgText = orgResult.join("\n");
+
+    const statText = Object.keys(dataByYear.statistics)
+        .map(key => `${key}: ${dataByYear.statistics[key]}`)
+        .join("\n")
+        .replace(/_/g, " ");
+
+    return `${orgText}\n_${statText}_`;
+}
+
+async function templatePreOrg(org) {
+    let text = "";
+
+    if (org.name) {
+        text += `*${org.name}*\n\n`;
+    }
+
+    if (org.winners) {
+        text += `Winners\n\n${org.winners.join("\n")}`;
+    }
+
+    if (org.finalists) {
+        text += `\n\nFinalists\n\n${org.finalists.join("\n")}`;
+    }
+
+    if (org.organizations) {
+        text += `\n\nOrganizations\n\n${org.organizations.join("\n")}`;
+    }
+
+    return text;
+}
+
 async function templateOrg(org, leaderList) {
     let leadlist = [];
 
@@ -98,7 +145,7 @@ async function readJSON(path) {
 
 function getLeadersNameData(leader) {
     return leader.map(lead => ({
-        name: lead.display_name.replace("_", " "),
+        name: lead.display_name.replace(/_/g, " "),
         github: lead.github_account
             ? `https://github.com/${lead.github_account}`
             : null
@@ -111,6 +158,7 @@ function stamp() {
 
 module.exports = {
     showAll,
+    showAllByYear,
     findOrg,
     findUser,
     templateOrg,
