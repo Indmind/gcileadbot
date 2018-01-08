@@ -60,7 +60,6 @@ async function createButtonYear() {
     );
 
     const organizedButton = await divideArray(cbButton, 2);
-    console.log(organizedButton);
 
     return Markup.inlineKeyboard(organizedButton).extra();
 }
