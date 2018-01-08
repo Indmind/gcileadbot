@@ -8,17 +8,27 @@ async function showAll() {
     const template = await Promise.all(fetchingTemplate);
 
     return {
-        result: template,
+        result: template.join("\n"),
         time_diff: stamp()
     };
 }
 
-async function templateOrg(org) {
+async function templateOrg(org, leaderList) {
+    let leadlist = [];
+
+    if (Array.isArray(leaderList)) {
+        leadlist = leaderList.map(
+            leader => (leader.highlight ? `*${leader.name}*` : leader.name)
+        );
+    } else {
+        leadlist = getLeadersNameList(org.leaders);
+    }
+
     return `[${org.name}](https://codein.withgoogle.com/organizations/${
         org.slug
     })\n\n_Tasks Completed: ${
         org.completed_task_instance_count
-    }_\n\n${getLeadersNameList(org.leaders).join("\n")}\n`;
+    }_\n\n${leadlist.join("\n")}\n`;
 }
 
 async function findOrg(query) {
@@ -48,7 +58,7 @@ async function findUser(query) {
         getLeadersNameList(org.leaders).includes(resultName)
     );
 
-    return { org: orgInfo, accuracy: bestResult.rating };
+    return { name: resultName, org: orgInfo, accuracy: bestResult.rating };
 }
 
 async function readJSON(path) {

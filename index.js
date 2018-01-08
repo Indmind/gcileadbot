@@ -55,8 +55,8 @@ app.hears(/all/i, async ctx => {
     const res1 = res.slice(0, mid);
     const res2 = res.slice(mid);
 
-    const text1 = `${res1.join("\n")}\n`;
-    const text2 = `${res2.join("\n")}\n`;
+    const text1 = `${res1}\n`;
+    const text2 = `${res2}\n`;
 
     await ctx.replyWithMarkdown(text1);
     await ctx.replyWithMarkdown(text2);
@@ -115,7 +115,7 @@ app.on("text", async ctx => {
 
             return await ctx.replyWithMarkdown(
                 `Last updated: ${result.stamp}\nAccuracy: ${
-                    result.orgInfo.accuracy
+                    result.user.accuracy
                 }`,
                 menu
             );
@@ -142,7 +142,7 @@ app.on("text", async ctx => {
     // try to find user
     const result = await findUser(userText);
 
-    if (result.orgInfo.accuracy > 0.5) {
+    if (result.user.accuracy > 0.5) {
         await ctx.replyWithMarkdown(
             `I found a username you might be looking for \n\n${
                 result.templateOrg
@@ -150,9 +150,7 @@ app.on("text", async ctx => {
         );
 
         return await ctx.replyWithMarkdown(
-            `Last updated: ${result.stamp}\nAccuracy: ${
-                result.orgInfo.accuracy
-            }`,
+            `Last updated: ${result.stamp}\nAccuracy: ${result.user.accuracy}`,
             menu
         );
     }
@@ -167,9 +165,19 @@ app.catch(err => {
 app.startPolling();
 
 async function findUser(query) {
-    const orgInfo = await gci.findUser(query);
-    const templateOrg = await gci.templateOrg(orgInfo.org);
+    const user = await gci.findUser(query);
+
+    const leaderList = user.org.leaders.map(lead =>
+        lead.display_name.replace("_", " ")
+    );
+
+    const leaderListHighlighted = leaderList.map(name => ({
+        name,
+        highlight: name === user.name
+    }));
+
+    const templateOrg = await gci.templateOrg(user.org, leaderListHighlighted);
     const stamp = await gci.stamp();
 
-    return { templateOrg, stamp, orgInfo };
+    return { templateOrg, stamp, user };
 }
