@@ -16,12 +16,23 @@ async function showAll() {
 async function templateOrg(org, leaderList) {
     let leadlist = [];
 
+    const leaderData = getLeadersNameData(org.leaders);
+
     if (Array.isArray(leaderList)) {
-        leadlist = leaderList.map(
-            leader => (leader.highlight ? `*${leader.name}*` : leader.name)
-        );
+        leaderList = leaderList.map((leader, index) => ({
+            ...leader,
+            github: leaderData[index].github
+        }));
+
+        leadlist = leaderList.map(user => {
+            return user.highlight
+                ? `*${user.name}* ${templateUserAcc(user)}`
+                : `${user.name} ${templateUserAcc(user)}`;
+        });
     } else {
-        leadlist = getLeadersNameList(org.leaders);
+        leadlist = leaderData.map(
+            user => `${user.name} ${templateUserAcc(user)}`
+        );
     }
 
     return `[${org.name}](https://codein.withgoogle.com/organizations/${
@@ -38,14 +49,20 @@ async function findOrg(query) {
     const nameRes = testName.bestMatch;
     const orgInfo = gcidata.find(org => org.name == nameRes.target);
 
-    return { result: orgInfo, accuracy: nameRes.rating };
+    return {
+        result: orgInfo,
+        accuracy: nameRes.rating
+    };
 }
 
 async function findUser(query) {
     const gcidata = await readJSON("./data/data.json");
 
     const matchResult = gcidata.map(org =>
-        stringSimilarity.findBestMatch(query, getLeadersNameList(org.leaders))
+        stringSimilarity.findBestMatch(
+            query,
+            getLeadersNameData(org.leaders).map(user => user.name)
+        )
     );
 
     const bestResult = matchResult
@@ -55,18 +72,37 @@ async function findUser(query) {
     const resultName = bestResult.target;
 
     const orgInfo = gcidata.find(org =>
-        getLeadersNameList(org.leaders).includes(resultName)
+        getLeadersNameData(org.leaders)
+            .map(user => user.name)
+            .includes(resultName)
     );
 
-    return { name: resultName, org: orgInfo, accuracy: bestResult.rating };
+    return {
+        name: resultName,
+        org: orgInfo,
+        accuracy: bestResult.rating
+    };
+}
+
+function templateUserAcc(user) {
+    if (user.github) {
+        return `([github](${user.github}))`;
+    }
+
+    return "";
 }
 
 async function readJSON(path) {
     return JSON.parse(fs.readFileSync(path));
 }
 
-function getLeadersNameList(leader) {
-    return leader.map(lead => lead.display_name.replace("_", " "));
+function getLeadersNameData(leader) {
+    return leader.map(lead => ({
+        name: lead.display_name.replace("_", " "),
+        github: lead.github_account
+            ? `https://github.com/${lead.github_account}`
+            : null
+    }));
 }
 
 function stamp() {
