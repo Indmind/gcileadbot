@@ -84,7 +84,7 @@ app.hears(/cancel/i, async ctx => {
 });
 
 app.on("callback_query", async ctx => {
-    console.log(ctx.update.callback_query.data);
+    console.log(`Callback Query: ${ctx.update.callback_query.data}`);
 
     const orgName = ctx.update.callback_query.data;
     const orgInfo = await gci.findOrg(orgName);
@@ -106,6 +106,9 @@ app.on("text", async ctx => {
 
     if (state[userId]) {
         if (state[userId].action === "search") {
+            //remove state
+            state[userId] = null;
+
             const result = await findUser(userText);
 
             await ctx.replyWithMarkdown(result.templateOrg);
@@ -117,9 +120,6 @@ app.on("text", async ctx => {
                 menu
             );
         }
-
-        //remove state
-        state[userId] = null;
     }
 
     // try to find organization
