@@ -124,15 +124,12 @@ app.on("callback_query", async ctx => {
     }
 
     if (action === "sc") {
-        const orgInfo = await gci.findOrg(text);
-        const orgName = orgInfo.result.name;
-
-        await gci.setShortcut(userId, orgName);
+        await gci.setShortcut(userId, text);
 
         allButton = await utils.createAllButton(ctx);
 
         return await ctx.replyWithMarkdown(
-            `Shortcut set to *${orgName}*\nYou can always change your shortcut by send me _'Shortcut'_\n
+            `Shortcut set to *${text}*\nYou can always change your shortcut by send me _'Shortcut'_\n
 *this is just an experimental features, so your shortcuts will be lost in each update*`,
             allButton
         );
