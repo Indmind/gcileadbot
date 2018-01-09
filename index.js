@@ -130,7 +130,7 @@ app.on("callback_query", async ctx => {
 
         return await ctx.replyWithMarkdown(
             `Shortcut set to *${text}*\nYou can always change your shortcut by send me _'Shortcut'_\n
-*this is just an experimental features, so your shortcuts will be lost in each update*`,
+*this is just an experimental features, so your shortcuts will be lost every update*`,
             allButton
         );
     }
