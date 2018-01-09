@@ -22,9 +22,12 @@ server.listen(port, err => {
     console.log(`server is listening on ${port}`);
 });
 
-app.command("start", ctx => {
+app.command("start", async ctx => {
     utils.log(ctx);
-    ctx.reply("Hello! use the button below to interact", utils.allButton);
+
+    const allButton = await utils.createAllButton(ctx);
+
+    ctx.reply("Hello! use the button below to interact", allButton);
 });
 
 let state = {};
@@ -70,16 +73,26 @@ app.hears(/all/i, async ctx => {
     await ctx.replyWithMarkdown(text1);
     await ctx.replyWithMarkdown(text2);
 
+    const allButton = await utils.createAllButton(ctx);
+
     return ctx.replyWithMarkdown(
         `Last updated: ${answer.time_diff}`,
-        utils.allButton
+        allButton
     );
 });
 
 app.hears(/organization/i, async ctx => {
     utils.log(ctx);
 
-    const orgButton = await utils.createAllOrgsButton();
+    const orgButton = await utils.createAllOrgsButton("org");
+
+    return await ctx.replyWithMarkdown("*Select organization*", orgButton);
+});
+
+app.hears(/shortcut/i, async ctx => {
+    utils.log(ctx);
+
+    const orgButton = await utils.createAllOrgsButton("sc");
 
     return await ctx.replyWithMarkdown("*Select organization*", orgButton);
 });
@@ -88,21 +101,40 @@ app.hears(/cancel/i, async ctx => {
     utils.log(ctx);
     //remove state
     state[ctx.message.from.id] = null;
+    const allButton = await utils.createAllButton(ctx);
 
-    return await ctx.reply("Canceled", utils.allButton);
+    return await ctx.reply("Canceled", allButton);
 });
 
 app.on("callback_query", async ctx => {
     console.log(`Callback Query: ${ctx.update.callback_query.data}`);
 
+    const userId = ctx.update.callback_query.message.chat.id;
     const cbdata = ctx.update.callback_query.data.split(":");
+
     const action = cbdata[0];
     const text = cbdata[1];
+
+    let allButton = await utils.createAllButton(ctx);
 
     if (action === "cy") {
         const result = await gci.showAllByYear(parseInt(text));
 
-        return await ctx.replyWithMarkdown(result, utils.allButton);
+        return await ctx.replyWithMarkdown(result, allButton);
+    }
+
+    if (action === "sc") {
+        const orgInfo = await gci.findOrg(text);
+        const orgName = orgInfo.result.name;
+
+        await gci.setShortcut(userId, orgName);
+
+        allButton = await utils.createAllButton(ctx);
+
+        return await ctx.replyWithMarkdown(
+            `Shortcut set to *${orgName}*\nYou can always change your shortchut by sendme _'Shortcut'_`,
+            allButton
+        );
     }
 
     if (action === "org") {
@@ -110,7 +142,7 @@ app.on("callback_query", async ctx => {
         const templateOrg = await gci.templateOrg(orgInfo.result);
         const stamp = await gci.stamp();
 
-        await ctx.replyWithMarkdown(templateOrg, utils.allButton);
+        await ctx.replyWithMarkdown(templateOrg, allButton);
 
         return ctx.replyWithMarkdown(`_Last updated: ${stamp}_`);
     }
@@ -122,7 +154,7 @@ app.on("text", async ctx => {
     const userId = ctx.message.from.id;
     const userText = ctx.message.text;
 
-    const menu = utils.allButton;
+    const menu = await utils.createAllButton(ctx);
 
     if (state[userId]) {
         if (state[userId].action === "search") {
@@ -149,9 +181,7 @@ app.on("text", async ctx => {
         const template = await gci.templateOrg(orgInfo.result);
         const stamp = await gci.stamp();
 
-        await ctx.replyWithMarkdown(
-            `I found an organization you might be looking for \n\n${template}`
-        );
+        await ctx.replyWithMarkdown(template);
 
         return await ctx.replyWithMarkdown(
             `Last updated: ${stamp}\nAccuracy: ${orgInfo.accuracy}`,
@@ -163,11 +193,7 @@ app.on("text", async ctx => {
     const result = await findUser(userText);
 
     if (result.user.accuracy > 0.5) {
-        await ctx.replyWithMarkdown(
-            `I found a username you might be looking for \n\n${
-                result.templateOrg
-            }`
-        );
+        await ctx.replyWithMarkdown(result.templateOrg);
 
         return await ctx.replyWithMarkdown(
             `Last updated: ${result.stamp}\nAccuracy: ${result.user.accuracy}`,

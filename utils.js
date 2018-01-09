@@ -1,6 +1,8 @@
 const { Markup } = require("telegraf");
 const fs = require("fs");
 
+const gci = require("./gci");
+
 function timeDifference(current, previous) {
     const msPerMinute = 60 * 1000;
     const msPerHour = msPerMinute * 60;
@@ -33,21 +35,25 @@ function log(ctx) {
     );
 }
 
-const allButton = Markup.keyboard([
-    ["Show All", "Organizations"],
-    ["Search", "Years"]
-])
-    .resize()
-    .extra();
+async function createAllButton(ctx) {
+    const shortcut = await gci.getShortcut(ctx.from.id);
+
+    return Markup.keyboard([
+        ["Show All", "Organizations"],
+        ["Search", "Years", shortcut]
+    ])
+        .resize()
+        .extra();
+}
 
 const cancelButton = Markup.keyboard(["Cancel"])
     .resize()
     .extra();
 
-async function createAllOrgsButton() {
+async function createAllOrgsButton(act) {
     const gcidata = await readJSON("./data/data.json");
     const cbButton = gcidata.map(org => [
-        Markup.callbackButton(org.name, `org:${org.name}`)
+        Markup.callbackButton(org.name, `${act}:${org.name}`)
     ]);
 
     return Markup.inlineKeyboard(cbButton).extra();
@@ -80,7 +86,7 @@ async function divideArray(arr, perchunk) {
 module.exports = {
     timeDifference,
     log,
-    allButton,
+    createAllButton,
     cancelButton,
     createAllOrgsButton,
     createButtonYear

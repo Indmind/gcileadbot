@@ -1,5 +1,7 @@
 const fs = require("fs");
 const stringSimilarity = require("string-similarity");
+const Datastore = require("nedb-promise");
+const db = new Datastore({ filename: "./data/shortcut.json", autoload: true });
 
 async function showAll() {
     const gcidata = await readJSON("./data/data.json");
@@ -156,11 +158,27 @@ function stamp() {
     return fs.readFileSync("./data/ago.txt", "UTF-8");
 }
 
+async function setShortcut(id, orgname) {
+    return await db.update(
+        { _id: id },
+        { _id: id, org: orgname },
+        { upsert: true }
+    );
+}
+
+async function getShortcut(id) {
+    const orgInfo = await db.findOne({ _id: id });
+
+    return orgInfo ? orgInfo.org : "Shortcut";
+}
+
 module.exports = {
     showAll,
     showAllByYear,
     findOrg,
     findUser,
     templateOrg,
-    stamp
+    stamp,
+    setShortcut,
+    getShortcut
 };
