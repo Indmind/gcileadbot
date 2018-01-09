@@ -132,7 +132,8 @@ app.on("callback_query", async ctx => {
         allButton = await utils.createAllButton(ctx);
 
         return await ctx.replyWithMarkdown(
-            `Shortcut set to *${orgName}*\nYou can always change your shortcut by send me _'Shortcut'_`,
+            `Shortcut set to *${orgName}*\nYou can always change your shortcut by send me _'Shortcut'_\n
+*this is just an experimental features, so your shortcuts will be lost in each update*`,
             allButton
         );
     }
